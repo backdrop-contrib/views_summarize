@@ -45,8 +45,8 @@
   <?php endif; ?>
   <tfoot>
     <tr class="summary">
-      <?php foreach ($header as $field => $label): ?>
-        <td><?php if (!empty($summarized[$field])) { echo $summarized[$field]; } ?></td>
+      <?php foreach ($summarized as $summary): ?>
+        <td><?php if (!empty($summary)) { echo $summary; } ?></td>
       <?php endforeach; ?>
     </tr>
   </tfoot>
