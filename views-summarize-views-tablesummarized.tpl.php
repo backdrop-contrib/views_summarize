@@ -44,9 +44,11 @@
   </tbody>
   <?php endif; ?>
   <tfoot>
-    <tr class="summary">
+    <tr class="summary <?php print implode(' ', end($row_classes)); ?>">
       <?php foreach ($summarized as $summary): ?>
-        <td><?php if (!empty($summary)) { echo $summary; } ?></td>
+        <td <?php if (!empty($field_classes[$field])) { print 'class="'. end($field_classes[$field]) . '" '; } ?>>
+          <?php if (!empty($summary)) { echo $summary; } ?>
+        </td>
       <?php endforeach; ?>
     </tr>
   </tfoot>

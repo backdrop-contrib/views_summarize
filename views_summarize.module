@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_views_api().
+ * Implements hook_views_api().
  */
 function views_summarize_views_api() {
   return array(
@@ -11,7 +11,7 @@ function views_summarize_views_api() {
 
 
 /*
- * Implementation of hook_theme()
+ * Implements hook_theme().
  */
 function views_summarize_theme() {
   return array(
@@ -24,6 +24,9 @@ function views_summarize_theme() {
     'views_summarize_type_count' => array(
       'variables' => array('data' => array()),
     ),
+    'views_summarize_type_unique' => array(
+      'variables' => array('data' => array()),
+    ),
     'views_summarize_type_range' => array(
       'variables' => array('data' => array()),
     ),
@@ -31,9 +34,6 @@ function views_summarize_theme() {
       'variables' => array('data' => array()),
     ),
     'views_summarize_type_total' => array(
-      'variables' => array('data' => array()),
-    ),
-    'views_summarize_type_currency' => array(
       'variables' => array('data' => array()),
     ),
     'views_summarize_type_average' => array(
@@ -47,15 +47,18 @@ function views_summarize_theme() {
 
 
 /**
- * List all of the handlers
+ * Returns a list of the available handlers.
+ *
+ * @return array
+ *   The handlers.
  */
 function views_summarize_get_handlers() {
   return array(
     'none'     => t('None'),
     'count'    => t('Count'),
+    'unique'   => t('Unique'),
     'range'    => t('Range'),
     'total'    => t('Total'),
-    'currency' => t('Total (Currency)'),
     'average'  => t('Average (include empty values)'),
     'average_no_empties' => t('Average (exclude empty values)'),
     'spread'   => t('Spread'),
@@ -64,11 +67,10 @@ function views_summarize_get_handlers() {
 
 
 /**
- * Display a view as a table summary.
+ * Displays a view as a table summary.
  */
 function template_preprocess_views_summarize_views_tablesummarized(&$vars) {
   template_preprocess_views_view_table($vars);
-  $handlers = views_summarize_get_handlers();
 
   if (!count($vars['rows'])) {
     return;
@@ -91,14 +93,29 @@ function template_preprocess_views_summarize_views_tablesummarized(&$vars) {
   foreach ($opts as $field => $settings) {
     if (isset($data[$field])) {
       $theme = 'views_summarize_type_' . $settings['summarize'];
-      $vars['summarized'][$field] = theme($theme, array('data' => $data[$field]));
+      $field_settings = array();
+      if (!empty($vars['view']->field[$field]->options['settings'])) {
+        $field_settings = $vars['view']->field[$field]->options['settings'];
+      }
+      $vars['summarized'][$field] = theme($theme, array(
+        'data' => $data[$field],
+        'options' => array(
+          'field' => $field,
+          'field_settings' => $field_settings,
+          'prefix' => $vars['view']->style_plugin->options['info'][$field]['prefix'],
+          'suffix' => $vars['view']->style_plugin->options['info'][$field]['suffix'],
+          'thousand' => $vars['view']->style_plugin->options['info'][$field]['thousand'],
+          'decimal' => $vars['view']->style_plugin->options['info'][$field]['decimal'],
+          'precision' => $vars['view']->style_plugin->options['info'][$field]['precision'],
+        ),
+      ));
     }
   }
 }
 
 
 /**
- * Theme the form for the table style plugin
+ * Themes the form for the display style plugin.
  *
  * This is almost the same as theme_views_ui_style_plugin_table().
  */
@@ -111,8 +128,13 @@ function theme_views_summarize_plugin_style_tablesummarized($variables) {
     t('Field'),
     t('Column'),
     t('Align'),
-    t('Summarize'),
     t('Separator'),
+    t('Summarize prefix'),
+    t('Summarize'),
+    t('Summarize suffix'),
+    t('Summarize thousand'),
+    t('Summarize decimal'),
+    t('Summarize precision'),
     array(
       'data' => t('Sortable'),
       'align' => 'center',
@@ -136,8 +158,13 @@ function theme_views_summarize_plugin_style_tablesummarized($variables) {
     $row[] = drupal_render($form['info'][$id]['name']);
     $row[] = drupal_render($form['columns'][$id]);
     $row[] = drupal_render($form['info'][$id]['align']);
-    $row[] = drupal_render($form['info'][$id]['summarize']);
     $row[] = drupal_render($form['info'][$id]['separator']);
+    $row[] = drupal_render($form['info'][$id]['prefix']);
+    $row[] = drupal_render($form['info'][$id]['summarize']);
+    $row[] = drupal_render($form['info'][$id]['suffix']);
+    $row[] = drupal_render($form['info'][$id]['thousand']);
+    $row[] = drupal_render($form['info'][$id]['decimal']);
+    $row[] = drupal_render($form['info'][$id]['precision']);
     if (!empty($form['info'][$id]['sortable'])) {
       $row[] = array(
         'data' => drupal_render($form['info'][$id]['sortable']),
@@ -165,7 +192,7 @@ function theme_views_summarize_plugin_style_tablesummarized($variables) {
   }
 
   // Add the special 'None' row.
-  $rows[] = array(t('None'), '', '', '', '', '', '', array('align' => 'center', 'data' => drupal_render($form['default'][-1])), '');
+  $rows[] = array(t('None'), '', '', '', '', '', '', '', '', '', '', '', array('align' => 'center', 'data' => drupal_render($form['default'][-1])), '');
 
   $output .= theme('table', array('header' => $header, 'rows' => $rows));
   $output .= drupal_render_children($form);
@@ -173,7 +200,7 @@ function theme_views_summarize_plugin_style_tablesummarized($variables) {
 }
 
 /**
- * Theme: No summary for this column
+ * Themes a no summary for the column.
  */
 function theme_views_summarize_type_none($variables) {
   return '';
@@ -181,111 +208,289 @@ function theme_views_summarize_type_none($variables) {
 
 
 /**
- * Theme: Total number of non-empty values in this column
+ * Themes the number of non-empty values in the column.
  */
 function theme_views_summarize_type_count($variables) {
   $data = $variables['data'];
-  return '<div class="label">' . t('Count:') . '</div>' .
-    count(array_filter($data));
+  $options = $variables['options'];
+
+  foreach ($data as $val) {
+    $data2[] = strip_tags($val);
+  }
+
+  $result = count(array_filter($data2));
+
+  if (isset($options['prefix'])) {
+    $result = $options['prefix'] . $result;
+  }
+  if (isset($options['suffix'])) {
+    $result .= $options['suffix'];
+  }
+
+  return theme('table', array(
+    'header' => array(array('data' => t('Count'))),
+    'rows'   => array(array($result)),
+  ));
 }
 
+/**
+ * Themes the number of unique, non-empty values in the column.
+ */
+function theme_views_summarize_type_unique($variables) {
+  $data = $variables['data'];
+  $options = $variables['options'];
+
+  foreach ($data as $val) {
+    $data2[] = strip_tags($val);
+  }
+
+  $result = count(array_unique(array_filter($data2)));
+
+  if (isset($options['prefix'])) {
+    $result = $options['prefix'] . $result;
+  }
+  if (isset($options['suffix'])) {
+    $result .= $options['suffix'];
+  }
+
+  return theme('table', array(
+    'header' => array(array('data' => t('Unique'))),
+    'rows'   => array(array($result)),
+  ));
+}
 
 /**
- * Theme: Maximum and minimum values in this column
+ * Themes the minimum and maximum values in the column.
  */
 function theme_views_summarize_type_range($variables) {
   $data = $variables['data'];
-  $rows = array(
-    array(t('Min'), min($data)),
-    array(t('Max'), max($data)),
-  );
-  $header = array(array('data' => t('Range'), 'colspan' => 2));
-  return theme('table', array('header' => $header, 'rows' => $rows));
-}
+  $options = $variables['options'];
 
-
-/**
- * Theme: Total value for a currency amount
- */
-function theme_views_summarize_type_currency($variables) {
-  $data = $variables['data'];
-  $total = 0;
+  // Get the total of the values, taking into account any field settings.
   foreach ($data as $val) {
-    // This allows for negative values and values w/commas to be added
-    // correctly.
-    $total += (float) preg_replace('/[^0-9\,\.\-]/', '', $val);
+    $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
+    if (!empty($options['field_settings']['thousand_separator'])) {
+      $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
+    }
+    if (!empty($options['field_settings']['decimal_separator'])) {
+      $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
+    }
+    $data2[] = floatval($val);
   }
-  return '<div class="label">' . t('Total:') . '</div>$' .
-    number_format($total, 2);
+
+  // Get the min/max, taking into account any display style settings.
+  if (isset($options['decimal']) && isset($options['thousand'])) {
+    $min = number_format(
+      min($data2),
+      $options['precision'],
+      $options['decimal'],
+      $options['thousand']
+    );
+    $max = number_format(
+      max($data2),
+      $options['precision'],
+      $options['decimal'],
+      $options['thousand']
+    );
+  }
+  else {
+    $min = min($data);
+    $max = max($data);
+  }
+
+  if (isset($options['prefix'])) {
+    $min = $options['prefix'] . $min;
+    $max = $options['prefix'] . $max;
+  }
+  if (isset($options['suffix'])) {
+    $min .= $options['suffix'];
+    $max .= $options['suffix'];
+  }
+
+  return theme('table', array(
+    'header' => array(array('data' => t('Range'), 'colspan' => 2)),
+    'rows'   => array(
+      array(t('Min'), $min),
+      array(t('Max'), $max),
+    ),
+  ));
 }
 
 
 /**
- * Theme: Total value for a numeric column
+ * Themes the total value for the values in the column.
  */
 function theme_views_summarize_type_total($variables) {
   $data = $variables['data'];
+  $options = $variables['options'];
   $total = 0;
+
+  // Get the total of all values, taking into account any field settings.
   foreach ($data as $val) {
-    // This allows for negative values and values w/commas to be added
-    // correctly.
-    $total += (float) preg_replace('/[^0-9\,\.\-]/', '', $val);
+    $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
+    if (!empty($options['field_settings']['thousand_separator'])) {
+      $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
+    }
+    if (!empty($options['field_settings']['decimal_separator'])) {
+      $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
+    }
+    $total += floatval($val);
   }
-  return '<div class="label">' . t('Total:') . '</div>' .
-    $total;
+
+  // Get the total, taking into account any display style settings.
+  if (isset($options['decimal']) && isset($options['thousand'])) {
+    $result = number_format(
+      $total,
+      $options['precision'],
+      $options['decimal'],
+      $options['thousand']
+    );
+  }
+  else {
+    $result = $total;
+  }
+
+  if (isset($options['prefix'])) {
+    $result = $options['prefix'] . $result;
+  }
+  if (isset($options['suffix'])) {
+    $result .= $options['suffix'];
+  }
+
+  return theme('table', array(
+    'header' => array(array('data' => t('Total'))),
+    'rows'   => array(array($result)),
+  ));
 }
 
 
 /**
- * Theme: Total value for an average column w/empty data values included.
+ * Themes the average of the values in the column w/empty data values included.
  */
 function theme_views_summarize_type_average($variables) {
   $data = $variables['data'];
+  $options = $variables['options'];
   $total = 0;
+
+  // Get the total of all values, taking into account any field settings.
   foreach ($data as $val) {
-    $total += (float) preg_replace('/[^0-9\,\.\-]/', '', $val);
+    $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
+    if (!empty($options['field_settings']['thousand_separator'])) {
+      $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
+    }
+    if (!empty($options['field_settings']['decimal_separator'])) {
+      $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
+    }
+    $total += floatval($val);
   }
-  return '<div class="label">' . t('Average (including empty values):') . '</div>' .
-    sprintf("%.2f", $total / count($data));
+
+  // Get the average, taking into account any display style settings.
+  if (isset($options['decimal']) && isset($options['thousand'])) {
+    $result = number_format(
+      $total / count($data),
+      $options['precision'],
+      $options['decimal'],
+      $options['thousand']
+    );
+  }
+  else {
+    $result = $total / count($data);
+  }
+
+  if (isset($options['prefix'])) {
+    $result = $options['prefix'] . $result;
+  }
+  if (isset($options['suffix'])) {
+    $result .= $options['suffix'];
+  }
+
+  return theme('table', array(
+    'header' => array(array('data' => t('Average (including empty values)'))),
+    'rows'   => array(array($result)),
+  ));
 }
 
 
 /**
- * Theme: Total value for an average column w/empty data values excluded.
+ * Themes the average of the values in the column w/empty data values excluded.
  */
 function theme_views_summarize_type_average_no_empties($variables) {
   $data = $variables['data'];
+  $options = $variables['options'];
   $total = 0;
   $count = 0;
+
+  // Get the total of all values, taking into account any field settings.
   foreach ($data as $val) {
     if (isset($val) && $val != '') {
-      $total += (float) preg_replace('/[^0-9\,\.\-]/', '', $val);
+      $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
+      if (!empty($options['field_settings']['thousand_separator'])) {
+        $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
+      }
+      if (!empty($options['field_settings']['decimal_separator'])) {
+        $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
+      }
+      $total += floatval($val);
       $count++;
     }
   }
+
+  // Get the average, taking into account any display style settings.
   if ($total != 0 && $count != 0) {
-    return '<div class="label">' . t('Average (excluding empty values):') . '</div>' .
-      sprintf("%.2f", $total / $count);
+    if (isset($options['decimal']) && isset($options['thousand'])) {
+      $result = number_format(
+        $total / $count,
+        $options['precision'],
+        $options['decimal'],
+        $options['thousand']
+      );
+    }
+    else {
+      $result = $total / $count;
+    }
   }
   else {
-    return '<div class="label">' . t('Average (excluding empty values):') . '</div>' .
-      sprintf("%.2f", '0');
+    $result = 0;
   }
+
+  if (isset($options['prefix'])) {
+    $result = $options['prefix'] . $result;
+  }
+  if (isset($options['suffix'])) {
+    $result .= $options['suffix'];
+  }
+
+  return theme('table', array(
+    'header' => array(array('data' => t('Average (excluding empty values)'))),
+    'rows'   => array(array($result)),
+  ));
 }
 
 
 /**
- * Theme: Spread table for a column
+ * Themes a spread table for the values in the column.
  */
 function theme_views_summarize_type_spread($variables) {
   $data = $variables['data'];
+  $options = $variables['options'];
   $hist = array();
+
+  // Get the total of all values, taking into account any field settings.
   foreach ($data as $val) {
+    $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
+    if (!empty($options['field_settings']['thousand_separator'])) {
+      $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
+    }
+    if (!empty($options['field_settings']['decimal_separator'])) {
+      $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
+    }
+
     if (!isset($hist[$val])) {
       $hist[$val] = 0;
     }
     $hist[$val]++;
   }
+
   $rows = array();
   foreach ($hist as $value => $count) {
     if (empty($value)) {
@@ -293,9 +498,22 @@ function theme_views_summarize_type_spread($variables) {
       $rows[$empty_string] = array($empty_string, $count);
     }
     else {
-      $rows[$value] = array($value, $count);
+      if (isset($options['decimal']) && isset($options['thousand'])) {
+        $result = number_format(
+          $value,
+          $options['precision'],
+          $options['decimal'],
+          $options['thousand']
+        );
+      }
+      else {
+        $result = $value;
+      }
+
+      $rows[$result] = array($result, $count);
     }
   }
+
   if (version_compare(phpversion(), '5.4.0', '>=')) {
     ksort($rows, SORT_NATURAL);
   }
@@ -303,6 +521,8 @@ function theme_views_summarize_type_spread($variables) {
     ksort($rows);
   }
 
-  $header = array(array('data' => t('Spread'), 'colspan' => 2));
-  return theme('table', array('header' => $header, 'rows' => $rows));
+  return theme('table', array(
+    'header' => array(array('data' => t('Spread'), 'colspan' => 2)),
+    'rows'   => $rows,
+  ));
 }

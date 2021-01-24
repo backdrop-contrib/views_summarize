@@ -1,0 +1,75 @@
+<?php
+
+/**
+ * @file
+ * Contains install, update, and uninstall routines for the module.
+ */
+
+/**
+ * Updates Views Summarize settings on displays using that style.
+ */
+function views_summarize_update_7201(&$sandbox) {
+  $all_views = views_get_all_views();
+  if (!empty($all_views)) {
+    $updates = array(
+      'prefix' => '',
+      'suffix' => '',
+      'precision' => 2,
+      'decimal' => '.',
+      'thousand' => ',',
+    );
+    $updated_views = array();
+
+    foreach ($all_views as $view) {
+      $updated = FALSE;
+      foreach ($view->display as $display) {
+        if (!empty($display->display_options['style_plugin']) && $display->display_options['style_plugin'] === 'tablesummarized') {
+          foreach ($display->display_options['style_options']['info'] as &$style_option) {
+            if (!empty($style_option['summarize'])) {
+              foreach ($updates as $key => $value) {
+                if (!isset($style_option[$key])) {
+                  $style_option[$key] = $value;
+                  if (!isset($updated_views[$view->human_name][$display->display_title])) {
+                    $updated_views[$view->human_name][$display->display_title] = FALSE;
+                  }
+                  $updated = TRUE;
+                }
+              }
+
+              if ($style_option['summarize'] === 'currency') {
+                $style_option['summarize'] = 'total';
+                $updated_views[$view->human_name][$display->display_title] = TRUE;
+              }
+            }
+          }
+        }
+      }
+
+      if ($updated) {
+        $view->save();
+      }
+    }
+
+    if (!empty($updated_views)) {
+      $notice = t('Updated the Views Summarize settings on one or more views for one or more displays:');
+      foreach ($updated_views as $view_name => $displays) {
+        $display_names = array();
+        foreach ($displays as $display => $result) {
+          if ($result) {
+            $display_names[] = '"' . $display . '" ' . t('(this display had one or more Currency summaries converted to Total summaries)');
+          }
+          else {
+            $display_names[] = '"' . $display . '"';
+          }
+        }
+        $replacements = array(
+          '@view_name' => $view_name,
+          '@displays' => implode(', ', $display_names),
+        );
+        $notice .= t('<br>View: @view_name; Display(s): @displays', $replacements);
+      }
+      watchdog('views_summarize', $notice);
+      drupal_set_message(t('One or more displays on one or more views have had their Views Summarize settings updated. See your Drupal log for the specific views and displays.'));
+    }
+  }
+}

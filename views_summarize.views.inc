@@ -12,7 +12,6 @@ function views_summarize_views_plugins() {
         'handler' => 'views_summarize_plugin_style_tablesummarized',
         'parent' => 'table',
         'theme' => 'views_summarize_views_tablesummarized',
-/*         'theme path' => drupal_get_path('module', 'views_summarize') . '/theme', */
         'uses row plugin' => FALSE,
         'uses row class' => TRUE,
         'uses fields' => TRUE,
