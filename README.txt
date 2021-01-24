@@ -38,14 +38,14 @@ CONFIGURATION
 -------------
 
 This module does not itself have configuration, but each Views display you
-create that uses the  Summarized table display style does. Add and configure the
+create that uses the Summarized table display style does. Add and configure the
 fields you want to display, then click the "settings" link for the Summarized
 table format.
 
 On the popup form will be six columns that relate to this module:
  * Summarize prefix: One or more characters to display before the summary, like
    a currency symbol
- * Summarize:
+ * Summarize: Specify which summary handler to use for the field
  * Summarize suffix: One or more characters to display after the summary, like a
    currency abbreviation
  * Summarize thousand: The character to use as a thousand separator
