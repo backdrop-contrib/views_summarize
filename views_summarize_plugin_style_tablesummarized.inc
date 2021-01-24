@@ -6,6 +6,10 @@
  * @ingroup views_style_plugins
  */
 class views_summarize_plugin_style_tablesummarized extends views_plugin_style_table {
+
+  /**
+   * Modify the options form to add options for this module.
+   */
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
@@ -56,7 +60,17 @@ class views_summarize_plugin_style_tablesummarized extends views_plugin_style_ta
       '#title' => t('Display the summary row only'),
       '#description' => t('If checked only the summary row will be displayed,'),
       '#type' => 'checkbox',
-      '#default_value' => !empty($this->options['summary_only']),
+      '#default_value' => $this->options['summary_only'],
     );
   }
+
+  /**
+   * Sets default options for this module.
+   */
+  function option_definition() {
+    $options = parent::option_definition();
+    $options['summary_only'] = array('default' => FALSE, 'bool' => TRUE);
+    return $options;
+  }
+
 }
