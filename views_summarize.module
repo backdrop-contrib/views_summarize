@@ -53,15 +53,26 @@ function views_summarize_theme() {
  *   The handlers.
  */
 function views_summarize_get_handlers() {
+  static $handlers = NULL;
+  if (!isset($handlers)) {
+    $handlers = module_invoke_all('views_summarize_handlers');
+  }
+  return $handlers;
+}
+
+/**
+ * Implements hook_views_summarize_handlers().
+ */
+function views_summarize_views_summarize_handlers() {
   return array(
-    'none'     => t('None'),
-    'count'    => t('Count'),
-    'unique'   => t('Unique'),
-    'range'    => t('Range'),
-    'total'    => t('Total'),
-    'average'  => t('Average (include empty values)'),
-    'average_no_empties' => t('Average (exclude empty values)'),
-    'spread'   => t('Spread'),
+    'views_summarize_type_none'               => t('None'),
+    'views_summarize_type_count'              => t('Count'),
+    'views_summarize_type_unique'             => t('Unique'),
+    'views_summarize_type_range'              => t('Range'),
+    'views_summarize_type_total'              => t('Total'),
+    'views_summarize_type_average'            => t('Average (include empty values)'),
+    'views_summarize_type_average_no_empties' => t('Average (exclude empty values)'),
+    'views_summarize_type_spread'             => t('Spread'),
   );
 }
 
@@ -92,12 +103,11 @@ function template_preprocess_views_summarize_views_tablesummarized(&$vars) {
   $vars['summarized'] = array();
   foreach ($opts as $field => $settings) {
     if (isset($data[$field])) {
-      $theme = 'views_summarize_type_' . $settings['summarize'];
       $field_settings = array();
       if (!empty($vars['view']->field[$field]->options['settings'])) {
         $field_settings = $vars['view']->field[$field]->options['settings'];
       }
-      $vars['summarized'][$field] = theme($theme, array(
+      $vars['summarized'][$field] = theme($settings['summarize'], array(
         'data' => $data[$field],
         'options' => array(
           'field' => $field,

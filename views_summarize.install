@@ -73,3 +73,27 @@ function views_summarize_update_7201(&$sandbox) {
     }
   }
 }
+
+/**
+ * Changes the machine names of views_summarize handlers in any existing views.
+ */
+function views_summarize_update_7202() {
+  $result = db_query("SELECT vid, id, display_options FROM {views_display}");
+  while ($display = $result->fetch()) {
+    $options = unserialize($display->display_options);
+    if (isset($options['style_plugin']) && $options['style_plugin'] == 'tablesummarized') {
+      foreach ($options['style_options']['info'] as &$field) {
+        if (!empty($field['summarize'])) {
+          $field['summarize'] = 'views_summarize_type_' . $field['summarize'];
+        }
+      }
+    }
+    db_update('views_display')
+      ->fields(array(
+        'display_options' => serialize($options),
+      ))
+      ->condition('vid', $display->vid)
+      ->condition('id', $display->id)
+      ->execute();
+  }
+}
