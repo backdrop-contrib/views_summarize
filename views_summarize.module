@@ -92,6 +92,12 @@ function template_preprocess_views_summarize_views_tablesummarized(&$vars) {
   if (isset($vars['view']->style_plugin->options['summary_only'])) {
     $vars['summary_only'] = $vars['view']->style_plugin->options['summary_only'];
   }
+  if (isset($vars['view']->style_plugin->options['summary_above'])) {
+    $vars['summary_above'] = $vars['view']->style_plugin->options['summary_above'];
+  }
+  if (isset($vars['view']->style_plugin->options['summary_below'])) {
+    $vars['summary_below'] = $vars['view']->style_plugin->options['summary_below'];
+  }
 
   $data = array();
   foreach ($vars['rows'] as $row) {

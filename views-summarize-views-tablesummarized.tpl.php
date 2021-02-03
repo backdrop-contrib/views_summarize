@@ -32,6 +32,14 @@
   </thead>
   <?php if (empty($summary_only)): ?>
   <tbody>
+    <?php if (!empty($summary_above)): ?>
+    <tr class="summary">
+      <?php foreach ($summarized as $field => $label): ?>
+        <td><?php if (!empty($summarized[$field])) { echo $summarized[$field]; } ?></td>
+      <?php endforeach; ?>
+    </tr>
+    <?php endif; ?>
+
     <?php foreach ($rows as $count => $row): ?>
       <tr class="<?php print implode(' ', $row_classes[$count]); ?>">
         <?php foreach ($row as $field => $content): ?>
@@ -43,6 +51,8 @@
     <?php endforeach; ?>
   </tbody>
   <?php endif; ?>
+
+  <?php if (!empty($summary_below)): ?>
   <tfoot>
     <tr class="summary <?php print implode(' ', end($row_classes)); ?>">
       <?php foreach ($summarized as $summary): ?>
@@ -52,4 +62,5 @@
       <?php endforeach; ?>
     </tr>
   </tfoot>
+  <?php endif; ?>
 </table>

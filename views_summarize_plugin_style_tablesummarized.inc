@@ -57,10 +57,22 @@ class views_summarize_plugin_style_tablesummarized extends views_plugin_style_ta
     }
 
     $form['summary_only'] = array(
-      '#title' => t('Display the summary row only'),
-      '#description' => t('If checked only the summary row will be displayed,'),
+      '#title' => t('Views Summarize: Display the summary row only'),
+      '#description' => t('If checked, only the summary row will be displayed. You must also specify the "Display the summary below the data" option.'),
       '#type' => 'checkbox',
       '#default_value' => $this->options['summary_only'],
+    );
+    $form['summary_above'] = array(
+      '#title' => t('Views Summarize: Display the summary above the data'),
+      '#description' => t('If checked, the summary row will be displayed above the other rows. If the "Display only the summary row" option above is selected, this summary will not be displayed.'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['summary_above'],
+    );
+    $form['summary_below'] = array(
+      '#title' => t('Views Summarize: Display the summary below the data'),
+      '#description' => t('If checked, the summary row will be displayed below the other rows.'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['summary_below'],
     );
   }
 
@@ -70,6 +82,8 @@ class views_summarize_plugin_style_tablesummarized extends views_plugin_style_ta
   function option_definition() {
     $options = parent::option_definition();
     $options['summary_only'] = array('default' => FALSE, 'bool' => TRUE);
+    $options['summary_above'] = array('default' => FALSE, 'bool' => TRUE);
+    $options['summary_below'] = array('default' => TRUE, 'bool' => TRUE);
     return $options;
   }
 
