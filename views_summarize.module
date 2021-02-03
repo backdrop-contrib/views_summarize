@@ -230,16 +230,10 @@ function theme_views_summarize_type_count($variables) {
 
   $result = count(array_filter($data2));
 
-  if (isset($options['prefix'])) {
-    $result = $options['prefix'] . $result;
-  }
-  if (isset($options['suffix'])) {
-    $result .= $options['suffix'];
-  }
-
+  $summary = _views_summarize_get_summary_output($result, $variables['options']);
   return theme('table', array(
     'header' => array(array('data' => t('Count'))),
-    'rows'   => array(array($result)),
+    'rows'   => array(array($summary)),
   ));
 }
 
@@ -256,16 +250,10 @@ function theme_views_summarize_type_unique($variables) {
 
   $result = count(array_unique(array_filter($data2)));
 
-  if (isset($options['prefix'])) {
-    $result = $options['prefix'] . $result;
-  }
-  if (isset($options['suffix'])) {
-    $result .= $options['suffix'];
-  }
-
+  $summary = _views_summarize_get_summary_output($result, $variables['options']);
   return theme('table', array(
     'header' => array(array('data' => t('Unique'))),
-    'rows'   => array(array($result)),
+    'rows'   => array(array($summary)),
   ));
 }
 
@@ -277,46 +265,16 @@ function theme_views_summarize_type_range($variables) {
   $options = $variables['options'];
 
   // Get the total of the values, taking into account any field settings.
-  foreach ($data as $val) {
-    $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
-    if (!empty($options['field_settings']['thousand_separator'])) {
-      $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
-    }
-    if (!empty($options['field_settings']['decimal_separator'])) {
-      $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
-    }
-    $data2[] = floatval($val);
+  foreach ($data as $value) {
+    $data2[] = floatval(_views_summarize_get_cleaned_value($value, $options));
   }
 
   // Get the min/max, taking into account any display style settings.
-  if (isset($options['decimal']) && isset($options['thousand'])) {
-    $min = number_format(
-      min($data2),
-      $options['precision'],
-      $options['decimal'],
-      $options['thousand']
-    );
-    $max = number_format(
-      max($data2),
-      $options['precision'],
-      $options['decimal'],
-      $options['thousand']
-    );
-  }
-  else {
-    $min = min($data);
-    $max = max($data);
-  }
+  $min = _views_summarize_get_formatted_summary(min($data2), $options);
+  $max = _views_summarize_get_formatted_summary(max($data2), $options);
 
-  if (isset($options['prefix'])) {
-    $min = $options['prefix'] . $min;
-    $max = $options['prefix'] . $max;
-  }
-  if (isset($options['suffix'])) {
-    $min .= $options['suffix'];
-    $max .= $options['suffix'];
-  }
-
+  $min = _views_summarize_get_summary_output($min, $variables['options']);
+  $max = _views_summarize_get_summary_output($max, $variables['options']);
   return theme('table', array(
     'header' => array(array('data' => t('Range'), 'colspan' => 2)),
     'rows'   => array(
@@ -325,7 +283,6 @@ function theme_views_summarize_type_range($variables) {
     ),
   ));
 }
-
 
 /**
  * Themes the total value for the values in the column.
@@ -336,40 +293,17 @@ function theme_views_summarize_type_total($variables) {
   $total = 0;
 
   // Get the total of all values, taking into account any field settings.
-  foreach ($data as $val) {
-    $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
-    if (!empty($options['field_settings']['thousand_separator'])) {
-      $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
-    }
-    if (!empty($options['field_settings']['decimal_separator'])) {
-      $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
-    }
-    $total += floatval($val);
+  foreach ($data as $value) {
+    $total += floatval(_views_summarize_get_cleaned_value($value, $options));
   }
 
   // Get the total, taking into account any display style settings.
-  if (isset($options['decimal']) && isset($options['thousand'])) {
-    $result = number_format(
-      $total,
-      $options['precision'],
-      $options['decimal'],
-      $options['thousand']
-    );
-  }
-  else {
-    $result = $total;
-  }
+  $result = _views_summarize_get_formatted_summary($total, $options);
 
-  if (isset($options['prefix'])) {
-    $result = $options['prefix'] . $result;
-  }
-  if (isset($options['suffix'])) {
-    $result .= $options['suffix'];
-  }
-
+  $summary = _views_summarize_get_summary_output($result, $variables['options']);
   return theme('table', array(
     'header' => array(array('data' => t('Total'))),
-    'rows'   => array(array($result)),
+    'rows'   => array(array($summary)),
   ));
 }
 
@@ -383,40 +317,17 @@ function theme_views_summarize_type_average($variables) {
   $total = 0;
 
   // Get the total of all values, taking into account any field settings.
-  foreach ($data as $val) {
-    $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
-    if (!empty($options['field_settings']['thousand_separator'])) {
-      $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
-    }
-    if (!empty($options['field_settings']['decimal_separator'])) {
-      $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
-    }
-    $total += floatval($val);
+  foreach ($data as $value) {
+    $total += floatval(_views_summarize_get_cleaned_value($value, $options));
   }
 
   // Get the average, taking into account any display style settings.
-  if (isset($options['decimal']) && isset($options['thousand'])) {
-    $result = number_format(
-      $total / count($data),
-      $options['precision'],
-      $options['decimal'],
-      $options['thousand']
-    );
-  }
-  else {
-    $result = $total / count($data);
-  }
+  $result = _views_summarize_get_formatted_summary($total / count($data), $options);
 
-  if (isset($options['prefix'])) {
-    $result = $options['prefix'] . $result;
-  }
-  if (isset($options['suffix'])) {
-    $result .= $options['suffix'];
-  }
-
+  $summary = _views_summarize_get_summary_output($result, $variables['options']);
   return theme('table', array(
     'header' => array(array('data' => t('Average (including empty values)'))),
-    'rows'   => array(array($result)),
+    'rows'   => array(array($summary)),
   ));
 }
 
@@ -430,49 +341,26 @@ function theme_views_summarize_type_average_no_empties($variables) {
   $total = 0;
   $count = 0;
 
-  // Get the total of all values, taking into account any field settings.
-  foreach ($data as $val) {
-    if (isset($val) && $val != '') {
-      $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
-      if (!empty($options['field_settings']['thousand_separator'])) {
-        $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
-      }
-      if (!empty($options['field_settings']['decimal_separator'])) {
-        $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
-      }
-      $total += floatval($val);
+  // Get the average, taking into account any display style settings.
+  foreach ($data as $value) {
+    if (isset($value) && $value != '') {
+      $total += floatval(_views_summarize_get_cleaned_value($value, $options));
       $count++;
     }
   }
 
   // Get the average, taking into account any display style settings.
   if ($total != 0 && $count != 0) {
-    if (isset($options['decimal']) && isset($options['thousand'])) {
-      $result = number_format(
-        $total / $count,
-        $options['precision'],
-        $options['decimal'],
-        $options['thousand']
-      );
-    }
-    else {
-      $result = $total / $count;
-    }
+    $result = _views_summarize_get_formatted_summary($total / $count, $options);
   }
   else {
     $result = 0;
   }
 
-  if (isset($options['prefix'])) {
-    $result = $options['prefix'] . $result;
-  }
-  if (isset($options['suffix'])) {
-    $result .= $options['suffix'];
-  }
-
+  $summary = _views_summarize_get_summary_output($result, $variables['options']);
   return theme('table', array(
     'header' => array(array('data' => t('Average (excluding empty values)'))),
-    'rows'   => array(array($result)),
+    'rows'   => array(array($summary)),
   ));
 }
 
@@ -482,19 +370,9 @@ function theme_views_summarize_type_average_no_empties($variables) {
  */
 function theme_views_summarize_type_spread($variables) {
   $data = $variables['data'];
-  $options = $variables['options'];
   $hist = array();
 
-  // Get the total of all values, taking into account any field settings.
   foreach ($data as $val) {
-    $val = preg_replace('/[^0-9\.\,\-]/', '', $val);
-    if (!empty($options['field_settings']['thousand_separator'])) {
-      $val = str_replace($options['field_settings']['thousand_separator'], '', $val);
-    }
-    if (!empty($options['field_settings']['decimal_separator'])) {
-      $val = str_replace($options['field_settings']['decimal_separator'], '.', $val);
-    }
-
     if (!isset($hist[$val])) {
       $hist[$val] = 0;
     }
@@ -508,19 +386,8 @@ function theme_views_summarize_type_spread($variables) {
       $rows[$empty_string] = array($empty_string, $count);
     }
     else {
-      if (isset($options['decimal']) && isset($options['thousand'])) {
-        $result = number_format(
-          $value,
-          $options['precision'],
-          $options['decimal'],
-          $options['thousand']
-        );
-      }
-      else {
-        $result = $value;
-      }
-
-      $rows[$result] = array($result, $count);
+     $value = strip_tags($value);
+     $rows[$value] = array($value, $count);
     }
   }
 
@@ -535,4 +402,94 @@ function theme_views_summarize_type_spread($variables) {
     'header' => array(array('data' => t('Spread'), 'colspan' => 2)),
     'rows'   => $rows,
   ));
+}
+
+/**
+ * Gets the record's value after stripping invalid characters.
+ *
+ * @param type $value
+ *   The value from which to strip invalid characters.
+ * @param type $options
+ *   The options element of the variables array that is passed into the summary
+ *   theme function.
+ *
+ * @return array
+ *  The value with invalid characters removed.
+ */
+function _views_summarize_get_cleaned_value($value, $options) {
+  $value = preg_replace('/[^0-9\.\,\-]/', '', strip_tags($value));
+
+  if (!empty($options['field_settings']['thousand_separator'])) {
+    $value = str_replace($options['field_settings']['thousand_separator'], '', $value);
+  }
+  if (!empty($options['field_settings']['decimal_separator'])) {
+    $value = str_replace($options['field_settings']['decimal_separator'], '.', $value);
+  }
+
+  return $value;
+}
+
+/**
+ * Gets the summary's formatted result.
+ *
+ * @param type $total
+ *   The summary to format.
+ * @param type $options
+ *   The options element of the variables array that is passed into the summary
+ *   theme function.
+ *
+ * @return array
+ *   The format settings in an associative array.
+ */
+function _views_summarize_get_formatted_summary($total, $options) {
+  $format_settings = array(
+    'precision' => 0,
+    'decimal_separator' => NULL,
+    'thousand_separator' => NULL,
+  );
+
+  if (!empty($options['precision'])) {
+    $format_settings['precision'] = (int) $options['precision'];
+  }
+  if (!empty($options['decimal'])) {
+    $format_settings['decimal_separator'] = $options['decimal'];
+  }
+  if (!empty($options['thousand'])) {
+    $format_settings['thousand_separator'] = $options['thousand'];
+  }
+
+  $summary = number_format(
+    $total,
+    $format_settings['precision'],
+    $format_settings['decimal_separator'],
+    $format_settings['thousand_separator']
+  );
+
+  return $summary;
+}
+
+/**
+ * Gets the prefix and suffix for a summary's output, if they exist.
+ *
+ * @param array $options
+ *   The options element of the variables array that is passed into the summary
+ *   theme function.
+ *
+ * @return array
+ *   The prefix and suffix in an associative array.
+ */
+function _views_summarize_get_summary_output($result, $options) {
+  $prefix_suffix = array(
+    'prefix' => '',
+    'suffix' => '',
+  );
+
+  if (!empty($options['prefix'])) {
+    $prefix_suffix['prefix'] = $options['prefix'];
+  }
+  if (!empty($options['suffix'])) {
+    $prefix_suffix['suffix'] = $options['suffix'];
+  }
+
+  return $prefix_suffix['prefix'] . $result . $prefix_suffix['suffix'];
 }
