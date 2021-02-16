@@ -5,7 +5,7 @@
  */
 function views_summarize_views_api() {
   return array(
-    'api' => 2,
+    'api' => 3,
   );
 }
 
@@ -118,11 +118,11 @@ function template_preprocess_views_summarize_views_tablesummarized(&$vars) {
         'options' => array(
           'field' => $field,
           'field_settings' => $field_settings,
-          'prefix' => $vars['view']->style_plugin->options['info'][$field]['prefix'],
-          'suffix' => $vars['view']->style_plugin->options['info'][$field]['suffix'],
-          'thousand' => $vars['view']->style_plugin->options['info'][$field]['thousand'],
-          'decimal' => $vars['view']->style_plugin->options['info'][$field]['decimal'],
-          'precision' => $vars['view']->style_plugin->options['info'][$field]['precision'],
+          'prefix' => empty($vars['view']->style_options['info'][$field]['prefix']) ? '' : $vars['view']->style_options['info'][$field]['prefix'],
+          'suffix' => empty($vars['view']->style_options['info'][$field]['suffix']) ? '' : $vars['view']->style_options['info'][$field]['suffix'],
+          'thousand' => empty($vars['view']->style_options['info'][$field]['thousand']) ? ',' : $vars['view']->style_options['info'][$field]['thousand'],
+          'decimal' => empty($vars['view']->style_options['info'][$field]['decimal']) ? '.' : $vars['view']->style_options['info'][$field]['decimal'],
+          'precision' => empty($vars['view']->style_options['info'][$field]['precision']) ? '2' : $vars['view']->style_options['info'][$field]['precision'],
         ),
       ));
     }
@@ -228,7 +228,6 @@ function theme_views_summarize_type_none($variables) {
  */
 function theme_views_summarize_type_count($variables) {
   $data = $variables['data'];
-  $options = $variables['options'];
 
   foreach ($data as $val) {
     $data2[] = strip_tags($val);
@@ -248,7 +247,6 @@ function theme_views_summarize_type_count($variables) {
  */
 function theme_views_summarize_type_unique($variables) {
   $data = $variables['data'];
-  $options = $variables['options'];
 
   foreach ($data as $val) {
     $data2[] = strip_tags($val);
