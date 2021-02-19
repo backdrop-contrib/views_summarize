@@ -1,7 +1,12 @@
 <?php
 
 /**
- * Implementation of hook_views_plugins().
+ * @file
+ * Declares a Views plugin.
+ */
+
+/**
+ * Implements hook_views_plugins().
  */
 function views_summarize_views_plugins() {
   return array(

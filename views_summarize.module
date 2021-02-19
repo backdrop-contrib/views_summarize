@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Provides a views display that outputs summaries of the values in a table.
+ */
+
+/**
  * Implements hook_views_api().
  */
 function views_summarize_views_api() {
@@ -9,8 +14,7 @@ function views_summarize_views_api() {
   );
 }
 
-
-/*
+/**
  * Implements hook_theme().
  */
 function views_summarize_theme() {
@@ -45,7 +49,6 @@ function views_summarize_theme() {
   );
 }
 
-
 /**
  * Returns a list of the available handlers.
  *
@@ -65,17 +68,16 @@ function views_summarize_get_handlers() {
  */
 function views_summarize_views_summarize_handlers() {
   return array(
-    'views_summarize_type_none'               => t('None'),
-    'views_summarize_type_count'              => t('Count'),
-    'views_summarize_type_unique'             => t('Unique'),
-    'views_summarize_type_range'              => t('Range'),
-    'views_summarize_type_total'              => t('Total'),
-    'views_summarize_type_average'            => t('Average (include empty values)'),
+    'views_summarize_type_none' => t('None'),
+    'views_summarize_type_count' => t('Count'),
+    'views_summarize_type_unique' => t('Unique'),
+    'views_summarize_type_range' => t('Range'),
+    'views_summarize_type_total' => t('Total'),
+    'views_summarize_type_average' => t('Average (include empty values)'),
     'views_summarize_type_average_no_empties' => t('Average (exclude empty values)'),
-    'views_summarize_type_spread'             => t('Spread'),
+    'views_summarize_type_spread' => t('Spread'),
   );
 }
-
 
 /**
  * Displays a view as a table summary.
@@ -130,7 +132,6 @@ function template_preprocess_views_summarize_views_tablesummarized(&$vars) {
     }
   }
 }
-
 
 /**
  * Themes the form for the display style plugin.
@@ -224,7 +225,6 @@ function theme_views_summarize_type_none($variables) {
   return '';
 }
 
-
 /**
  * Themes the number of non-empty values in the column.
  */
@@ -243,7 +243,7 @@ function theme_views_summarize_type_count($variables) {
   $summary = _views_summarize_get_summary_output($result, $options);
   return theme('table', array(
     'header' => array(array('data' => t('Count'))),
-    'rows'   => array(array($summary)),
+    'rows' => array(array($summary)),
   ));
 }
 
@@ -275,7 +275,7 @@ function theme_views_summarize_type_unique($variables) {
   $summary = _views_summarize_get_summary_output($result, $options);
   return theme('table', array(
     'header' => array(array('data' => t('Unique'))),
-    'rows'   => array(array($summary)),
+    'rows' => array(array($summary)),
   ));
 }
 
@@ -306,7 +306,7 @@ function theme_views_summarize_type_range($variables) {
 
   return theme('table', array(
     'header' => $header,
-    'rows'   => array(
+    'rows' => array(
       array(
         t('Min'),
         $min,
@@ -339,10 +339,9 @@ function theme_views_summarize_type_total($variables) {
   $summary = _views_summarize_get_summary_output($result, $options);
   return theme('table', array(
     'header' => array(array('data' => t('Total'))),
-    'rows'   => array(array($summary)),
+    'rows' => array(array($summary)),
   ));
 }
-
 
 /**
  * Themes the average of the values in the column w/empty data values included.
@@ -364,10 +363,9 @@ function theme_views_summarize_type_average($variables) {
   $summary = _views_summarize_get_summary_output($result, $options);
   return theme('table', array(
     'header' => array(array('data' => t('Average (including empty values)'))),
-    'rows'   => array(array($summary)),
+    'rows' => array(array($summary)),
   ));
 }
-
 
 /**
  * Themes the average of the values in the column w/empty data values excluded.
@@ -398,10 +396,9 @@ function theme_views_summarize_type_average_no_empties($variables) {
   $summary = _views_summarize_get_summary_output($result, $options);
   return theme('table', array(
     'header' => array(array('data' => t('Average (excluding empty values)'))),
-    'rows'   => array(array($summary)),
+    'rows' => array(array($summary)),
   ));
 }
-
 
 /**
  * Themes a spread table for the values in the column.
@@ -431,8 +428,8 @@ function theme_views_summarize_type_spread($variables) {
         $rows[$empty_string] = array($empty_string, $count);
       }
       else {
-       $value = strip_tags($value);
-       $rows[$value] = array($value, $count);
+        $value = strip_tags($value);
+        $rows[$value] = array($value, $count);
       }
     }
 
@@ -446,23 +443,23 @@ function theme_views_summarize_type_spread($variables) {
 
   return theme('table', array(
     'header' => $header,
-    'rows'   => $rows,
+    'rows' => $rows,
   ));
 }
 
 /**
  * Gets the record's value after stripping invalid characters.
  *
- * @param type $value
+ * @param string $value
  *   The value from which to strip invalid characters.
- * @param type $options
+ * @param array $options
  *   The options element of the variables array that is passed into the summary
  *   theme function.
  *
  * @return array
- *  The value with invalid characters removed.
+ *   The value with invalid characters removed.
  */
-function _views_summarize_get_cleaned_value($value, $options) {
+function _views_summarize_get_cleaned_value($value, array $options) {
   $value = preg_replace('/[^0-9\.\,\-]/', '', strip_tags($value));
 
   if (!empty($options['views_field_settings']['thousand_separator'])) {
@@ -478,16 +475,16 @@ function _views_summarize_get_cleaned_value($value, $options) {
 /**
  * Gets the summary's formatted result.
  *
- * @param type $total
+ * @param string $total
  *   The summary to format.
- * @param type $options
+ * @param array $options
  *   The options element of the variables array that is passed into the summary
  *   theme function.
  *
  * @return array
  *   The format settings in an associative array.
  */
-function _views_summarize_get_formatted_summary($total, $options) {
+function _views_summarize_get_formatted_summary($total, array $options) {
   $format_settings = array(
     'precision' => 0,
     'decimal_separator' => NULL,
@@ -517,7 +514,7 @@ function _views_summarize_get_formatted_summary($total, $options) {
 /**
  * Gets the prefix and suffix for a summary's output, if they exist.
  *
- * @param array $result
+ * @param string $result
  *   The calculated summary.
  * @param array $options
  *   The options element of the variables array that is passed into the summary
@@ -526,7 +523,7 @@ function _views_summarize_get_formatted_summary($total, $options) {
  * @return array
  *   The prefix and suffix in an associative array.
  */
-function _views_summarize_get_summary_output($result, $options) {
+function _views_summarize_get_summary_output($result, array $options) {
   $prefix_suffix = array(
     'prefix' => '',
     'suffix' => '',
