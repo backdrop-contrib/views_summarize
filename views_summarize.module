@@ -118,15 +118,15 @@ function template_preprocess_views_summarize_views_tablesummarized(&$vars) {
       }
 
       // Get the field instance settings.
-      $field_config_settings = array();
+      $views_style_options = array();
       if (!empty($vars['view']->style_options['info'][$field])) {
-        $field_config_settings = $vars['view']->style_options['info'][$field];
+        $views_style_options = $vars['view']->style_options['info'][$field];
       }
 
       $data[$field]['options'] = array(
         'field' => $field,
-        'views_field_settings' => $field_settings,
-        'field_instance_settings' => $field_config_settings,
+        'field_settings' => $field_settings,
+        'views_style_options' => $views_style_options,
       );
       $vars['summarized'][$field] = theme($settings['summarize'], $data[$field]);
     }
@@ -462,11 +462,11 @@ function theme_views_summarize_type_spread($variables) {
 function _views_summarize_get_cleaned_value($value, array $options) {
   $value = preg_replace('/[^0-9\.\,\-]/', '', strip_tags($value));
 
-  if (!empty($options['views_field_settings']['thousand_separator'])) {
-    $value = str_replace($options['views_field_settings']['thousand_separator'], '', $value);
+  if (!empty($options['field_settings']['thousand_separator'])) {
+    $value = str_replace($options['field_settings']['thousand_separator'], '', $value);
   }
-  if (!empty($options['views_field_settings']['decimal_separator'])) {
-    $value = str_replace($options['views_field_settings']['decimal_separator'], '.', $value);
+  if (!empty($options['field_settings']['decimal_separator'])) {
+    $value = str_replace($options['field_settings']['decimal_separator'], '.', $value);
   }
 
   return $value;
@@ -491,14 +491,14 @@ function _views_summarize_get_formatted_summary($total, array $options) {
     'thousand_separator' => NULL,
   );
 
-  if (!empty($options['field_instance_settings']['precision'])) {
-    $format_settings['precision'] = (int) $options['field_instance_settings']['precision'];
+  if (!empty($options['views_style_options']['precision'])) {
+    $format_settings['precision'] = (int) $options['views_style_options']['precision'];
   }
-  if (!empty($options['field_instance_settings']['decimal'])) {
-    $format_settings['decimal_separator'] = $options['field_instance_settings']['decimal'];
+  if (!empty($options['views_style_options']['decimal'])) {
+    $format_settings['decimal_separator'] = $options['views_style_options']['decimal'];
   }
-  if (!empty($options['field_instance_settings']['thousand'])) {
-    $format_settings['thousand_separator'] = $options['field_instance_settings']['thousand'];
+  if (!empty($options['views_style_options']['thousand'])) {
+    $format_settings['thousand_separator'] = $options['views_style_options']['thousand'];
   }
 
   $summary = number_format(
@@ -529,11 +529,11 @@ function _views_summarize_get_summary_output($result, array $options) {
     'suffix' => '',
   );
 
-  if (!empty($options['field_instance_settings']['prefix'])) {
-    $prefix_suffix['prefix'] = $options['field_instance_settings']['prefix'];
+  if (!empty($options['views_style_options']['prefix'])) {
+    $prefix_suffix['prefix'] = $options['views_style_options']['prefix'];
   }
-  if (!empty($options['field_instance_settings']['suffix'])) {
-    $prefix_suffix['suffix'] = $options['field_instance_settings']['suffix'];
+  if (!empty($options['views_style_options']['suffix'])) {
+    $prefix_suffix['suffix'] = $options['views_style_options']['suffix'];
   }
 
   return $prefix_suffix['prefix'] . $result . $prefix_suffix['suffix'];
