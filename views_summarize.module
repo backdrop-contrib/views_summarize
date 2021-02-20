@@ -43,9 +43,6 @@ function views_summarize_theme() {
     'views_summarize_type_average' => array(
       'variables' => array('data' => array()),
     ),
-    'views_summarize_type_average_no_empties' => array(
-      'variables' => array('data' => array()),
-    ),
   );
 }
 
@@ -73,8 +70,7 @@ function views_summarize_views_summarize_handlers() {
     'views_summarize_type_unique' => t('Unique'),
     'views_summarize_type_range' => t('Range'),
     'views_summarize_type_total' => t('Total'),
-    'views_summarize_type_average' => t('Average (include empty values)'),
-    'views_summarize_type_average_no_empties' => t('Average (exclude empty values)'),
+    'views_summarize_type_average' => t('Average'),
     'views_summarize_type_spread' => t('Spread'),
   );
 }
@@ -148,12 +144,13 @@ function theme_views_summarize_plugin_style_tablesummarized($variables) {
     t('Column'),
     t('Align'),
     t('Separator'),
-    t('Summarize prefix'),
-    t('Summarize'),
-    t('Summarize suffix'),
-    t('Summarize thousand'),
-    t('Summarize decimal'),
-    t('Summarize precision'),
+    t('Summary prefix'),
+    t('Summary'),
+    t('Include empty values'),
+    t('Summary suffix'),
+    t('Summary thousands separator'),
+    t('Summary decimal separator'),
+    t('Summary precision'),
     array(
       'data' => t('Sortable'),
       'align' => 'center',
@@ -180,6 +177,7 @@ function theme_views_summarize_plugin_style_tablesummarized($variables) {
     $row[] = drupal_render($form['info'][$id]['separator']);
     $row[] = drupal_render($form['info'][$id]['prefix']);
     $row[] = drupal_render($form['info'][$id]['summarize']);
+    $row[] = drupal_render($form['info'][$id]['include_empties']);
     $row[] = drupal_render($form['info'][$id]['suffix']);
     $row[] = drupal_render($form['info'][$id]['thousand']);
     $row[] = drupal_render($form['info'][$id]['decimal']);
@@ -226,24 +224,39 @@ function theme_views_summarize_type_none($variables) {
 }
 
 /**
- * Themes the number of non-empty values in the column.
+ * Themes the count of values in the column.
  */
 function theme_views_summarize_type_count($variables) {
   $values = $variables['values'];
   $options = $variables['options'];
 
+  $header = _views_summarize_get_header(t('Count'), $options);
+
+  $values2 = array();
   if (!empty($values) && is_array($values)) {
     foreach ($values as $value) {
-      $values2[] = strip_tags($value);
+      if (empty($options['views_style_options']['include_empties'])) {
+        if (isset($value) && $value != '') {
+          $values2[] = strip_tags($value);
+        }
+      }
+      else {
+        $values2[] = strip_tags($value);
+      }
     }
   }
 
-  $result = count(array_filter($values2, '_views_summarize_type_count_filter'));
+  $result = count(array_filter($values2, '_views_summarize_array_filter'));
 
   $summary = _views_summarize_get_summary_output($result, $options);
+
   return theme('table', array(
-    'header' => array(array('data' => t('Count'))),
-    'rows' => array(array($summary)),
+    'header' => $header,
+    'rows' => array(
+      array(
+        $summary,
+      ),
+    ),
   ));
 }
 
@@ -253,29 +266,44 @@ function theme_views_summarize_type_count($variables) {
  * @param int $value
  *   The value to check.
  */
-function _views_summarize_type_count_filter($value) {
+function _views_summarize_array_filter($value) {
   return isset($value);
 }
 
 /**
- * Themes the number of unique, non-empty values in the column.
+ * Themes the number of unique values in the column.
  */
 function theme_views_summarize_type_unique($variables) {
   $values = $variables['values'];
   $options = $variables['options'];
 
+  $header = _views_summarize_get_header(t('Unique'), $options);
+
+  $values2 = array();
   if (!empty($values) && is_array($values)) {
     foreach ($values as $value) {
-      $values2[] = strip_tags($value);
+      if (empty($options['views_style_options']['include_empties'])) {
+        if (isset($value) && $value != '') {
+          $values2[] = strip_tags($value);
+        }
+      }
+      else {
+        $values2[] = strip_tags($value);
+      }
     }
   }
 
-  $result = count(array_unique(array_filter($values2)));
+  $result = count(array_unique(array_filter($values2, '_views_summarize_array_filter')));
 
   $summary = _views_summarize_get_summary_output($result, $options);
+
   return theme('table', array(
-    'header' => array(array('data' => t('Unique'))),
-    'rows' => array(array($summary)),
+    'header' => $header,
+    'rows' => array(
+      array(
+        $summary,
+      ),
+    ),
   ));
 }
 
@@ -285,16 +313,25 @@ function theme_views_summarize_type_unique($variables) {
 function theme_views_summarize_type_range($variables) {
   $values = $variables['values'];
   $options = $variables['options'];
-  $header = array(
-    array(
-      'data' => t('Range'),
-      'colspan' => 2,
-    ),
-  );
 
+  $header = _views_summarize_get_header(t('Range'), $options, TRUE, TRUE);
+
+  $values2 = array();
   if (!empty($values) && is_array($values)) {
     foreach ($values as $value) {
-      $values2[] = floatval(_views_summarize_get_cleaned_value($value, $options));
+      if (empty($options['views_style_options']['include_empties'])) {
+        if (isset($value) && ($value != '' || is_numeric($value))) {
+          $values2[] = floatval(_views_summarize_get_cleaned_value($value, $options));
+        }
+      }
+      else {
+        if (isset($value) && $value == '' && !is_numeric($value)) {
+          $values2[] = '';
+        }
+        else {
+          $values2[] = floatval(_views_summarize_get_cleaned_value($value, $options));
+        }
+      }
     }
   }
 
@@ -320,72 +357,61 @@ function theme_views_summarize_type_range($variables) {
 }
 
 /**
- * Themes the total value for the values in the column.
+ * Themes the total of the values in the column.
  */
 function theme_views_summarize_type_total($variables) {
   $values = $variables['values'];
   $options = $variables['options'];
-  $total = 0;
 
+  $header = _views_summarize_get_header(t('Total'), $options, FALSE);
+
+  $total = 0;
   if (!empty($values) && is_array($values)) {
     foreach ($values as $value) {
       $total += floatval(_views_summarize_get_cleaned_value($value, $options));
     }
   }
 
-  // Get the total, taking into account any display style settings.
   $result = _views_summarize_get_formatted_summary($total, $options);
 
   $summary = _views_summarize_get_summary_output($result, $options);
+
   return theme('table', array(
-    'header' => array(array('data' => t('Total'))),
-    'rows' => array(array($summary)),
+    'header' => $header,
+    'rows' => array(
+      array(
+        $summary,
+      ),
+    ),
   ));
 }
 
 /**
- * Themes the average of the values in the column w/empty data values included.
+ * Themes the average of the values in the column.
  */
 function theme_views_summarize_type_average($variables) {
   $values = $variables['values'];
   $options = $variables['options'];
-  $total = 0;
 
-  if (!empty($values) && is_array($values)) {
-    foreach ($values as $value) {
-      $total += floatval(_views_summarize_get_cleaned_value($value, $options));
-    }
-  }
+  $header = _views_summarize_get_header(t('Average'), $options);
 
-  // Get the average, taking into account any display style settings.
-  $result = _views_summarize_get_formatted_summary($total / count($values), $options);
-
-  $summary = _views_summarize_get_summary_output($result, $options);
-  return theme('table', array(
-    'header' => array(array('data' => t('Average (including empty values)'))),
-    'rows' => array(array($summary)),
-  ));
-}
-
-/**
- * Themes the average of the values in the column w/empty data values excluded.
- */
-function theme_views_summarize_type_average_no_empties($variables) {
-  $values = $variables['values'];
-  $options = $variables['options'];
   $total = 0;
   $count = 0;
-
   if (!empty($values) && is_array($values)) {
     foreach ($values as $value) {
-      if (isset($value) && $value != '') {
+      if (empty($options['views_style_options']['include_empties'])) {
+        if (isset($value) && $value != '') {
+          $total += floatval(_views_summarize_get_cleaned_value($value, $options));
+          $count++;
+        }
+      }
+      else {
         $total += floatval(_views_summarize_get_cleaned_value($value, $options));
         $count++;
       }
     }
   }
 
-  // Get the average, taking into account any display style settings.
   if ($total != 0 && $count != 0) {
     $result = _views_summarize_get_formatted_summary($total / $count, $options);
   }
@@ -394,9 +420,14 @@ function theme_views_summarize_type_average_no_empties($variables) {
   }
 
   $summary = _views_summarize_get_summary_output($result, $options);
+
   return theme('table', array(
-    'header' => array(array('data' => t('Average (excluding empty values)'))),
-    'rows' => array(array($summary)),
+    'header' => $header,
+    'rows' => array(
+      array(
+        $summary,
+      ),
+    ),
   ));
 }
 
@@ -405,31 +436,46 @@ function theme_views_summarize_type_average_no_empties($variables) {
  */
 function theme_views_summarize_type_spread($variables) {
   $values = $variables['values'];
-  $hist = array();
-  $header = array(
-    array(
-      'data' => t('Spread'),
-      'colspan' => 2,
-    ),
-  );
-  $rows = array();
+  $options = $variables['options'];
 
+  $header = _views_summarize_get_header(t('Spread'), $options, TRUE, TRUE);
+
+  $hist = array();
+  $rows = array();
   if (!empty($values) && is_array($values)) {
-    foreach ($values as $val) {
-      if (!isset($hist[$val])) {
-        $hist[$val] = 0;
+    foreach ($values as $value) {
+      if (empty($options['views_style_options']['include_empties'])) {
+        if (isset($value) && $value != '') {
+          if (!isset($hist[$value])) {
+            $hist[$value] = 0;
+          }
+          $hist[$value]++;
+        }
       }
-      $hist[$val]++;
+      else {
+        if (!isset($hist[$value])) {
+          $hist[$value] = 0;
+        }
+        $hist[$value]++;
+      }
     }
 
     foreach ($hist as $value => $count) {
-      if (empty($value)) {
-        $empty_string = t('(empty)');
-        $rows[$empty_string] = array($empty_string, $count);
+      if (empty($options['views_style_options']['include_empties'])) {
+        if (isset($value) && ($value != '' || is_numeric($value))) {
+          $value = strip_tags($value);
+          $rows[$value] = array($value, $count);
+        }
       }
       else {
-        $value = strip_tags($value);
-        $rows[$value] = array($value, $count);
+        if (isset($value) && $value == '' && !is_numeric($value)) {
+          $empty_string = t('(empty)');
+          $rows[$empty_string] = array($empty_string, $count);
+        }
+        else {
+          $value = strip_tags($value);
+          $rows[$value] = array($value, $count);
+        }
       }
     }
 
@@ -445,6 +491,41 @@ function theme_views_summarize_type_spread($variables) {
     'header' => $header,
     'rows' => $rows,
   ));
+}
+
+/**
+ * Gets the record's value after stripping invalid characters.
+ *
+ * @param string $label
+ *   The value from which to strip invalid characters.
+ * @param array $options
+ *   The options element of the variables array that is passed into the summary
+ *   theme function.
+ * @param bool $check_empties
+ *   Specify TRUE if the summary might include or exclude empty values.
+ * @param bool $colspan
+ *   Specify TRUE to add colspan with a value of 2.
+ *
+ * @return array
+ *   The value with invalid characters removed.
+ */
+function _views_summarize_get_header($label, array $options, $check_empties = TRUE, $colspan = FALSE) {
+  if ($check_empties) {
+    if (empty($options['views_style_options']['include_empties'])) {
+      $label = $label . ' ' . t('(excluding empty values)');
+    }
+    else {
+      $label = $label . ' ' . t('(including empty values)');
+    }
+  }
+
+  $header = array(array('data' => $label));
+
+  if ($colspan) {
+    $header[0]['colspan'] = 2;
+  }
+
+  return $header;
 }
 
 /**
@@ -501,12 +582,15 @@ function _views_summarize_get_formatted_summary($total, array $options) {
     $format_settings['thousand_separator'] = $options['views_style_options']['thousand'];
   }
 
-  $summary = number_format(
-    $total,
-    $format_settings['precision'],
-    $format_settings['decimal_separator'],
-    $format_settings['thousand_separator']
-  );
+  $summary = '';
+  if (is_numeric($total)) {
+    $summary = number_format(
+      $total,
+      $format_settings['precision'],
+      $format_settings['decimal_separator'],
+      $format_settings['thousand_separator']
+    );
+  }
 
   return $summary;
 }

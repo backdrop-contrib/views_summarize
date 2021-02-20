@@ -39,6 +39,7 @@ function views_summarize_update_7201(&$sandbox) {
               if ($style_option['summarize'] === 'currency') {
                 $style_option['summarize'] = 'total';
                 $updated_views[$view->human_name][$display->display_title] = TRUE;
+                $updated = TRUE;
               }
             }
           }
@@ -95,5 +96,65 @@ function views_summarize_update_7202() {
       ->condition('vid', $display->vid)
       ->condition('id', $display->id)
       ->execute();
+  }
+}
+
+/**
+ * Updates average summaries to use the new Include empty values setting.
+ */
+function views_summarize_update_7203(&$sandbox) {
+  $all_views = views_get_all_views(TRUE);
+  if (!empty($all_views)) {
+    $updated_views = array();
+
+    foreach ($all_views as $view) {
+      $updated = FALSE;
+      foreach ($view->display as $display) {
+        if (!empty($display->display_options['style_plugin']) && $display->display_options['style_plugin'] === 'tablesummarized') {
+          foreach ($display->display_options['style_options']['info'] as &$style_option) {
+            if (!empty($style_option['summarize'])) {
+              if ($style_option['summarize'] === 'average' || $style_option['summarize'] === 'views_summarize_type_average') {
+                $style_option['summarize'] = 'views_summarize_type_average';
+                $style_option['include_empties'] = 1;
+                $updated_views[$view->human_name][$display->display_title] = TRUE;
+                $updated = TRUE;
+              }
+              elseif ($style_option['summarize'] === 'average_no_empties' || $style_option['summarize'] === 'views_summarize_type_average_no_empties') {
+                $style_option['summarize'] = 'views_summarize_type_average';
+                $style_option['include_empties'] = 0;
+                $updated_views[$view->human_name][$display->display_title] = TRUE;
+                $updated = TRUE;
+              }
+            }
+          }
+        }
+      }
+
+      if ($updated) {
+        $view->save();
+      }
+    }
+
+    if (!empty($updated_views)) {
+      $notice = t('Updated the Views Summarize settings on one or more views for one or more displays:');
+      foreach ($updated_views as $view_name => $displays) {
+        $display_names = array();
+        foreach ($displays as $display => $result) {
+          if ($result) {
+            $display_names[] = '"' . $display . '" ' . t('(this display had one or more average summaries modified)');
+          }
+          else {
+            $display_names[] = '"' . $display . '"';
+          }
+        }
+        $replacements = array(
+          '@view_name' => $view_name,
+          '@displays' => implode(', ', $display_names),
+        );
+        $notice .= t('<br>View: @view_name; Display(s): @displays', $replacements);
+      }
+      watchdog('views_summarize', $notice);
+      drupal_set_message(t('One or more displays on one or more views have had their Views Summarize settings updated. See your Drupal log for the specific views and displays.'));
+    }
   }
 }

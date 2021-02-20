@@ -21,7 +21,7 @@ class views_summarize_plugin_style_tablesummarized extends views_plugin_style_ta
       $form['info'][$field]['prefix'] = array(
         '#type' => 'textfield',
         '#default_value' => isset($this->options['info'][$field]['prefix']) ? $this->options['info'][$field]['prefix'] : '',
-        '#size' => 6,
+        '#size' => 5,
         '#dependency' => array($id => array($field)),
       );
       $form['info'][$field]['summarize'] = array(
@@ -30,28 +30,34 @@ class views_summarize_plugin_style_tablesummarized extends views_plugin_style_ta
         '#default_value' => !empty($this->options['info'][$field]['summarize']) ? $this->options['info'][$field]['summarize'] : 'none',
         '#dependency' => array($id => array($field)),
       );
+      $form['info'][$field]['include_empties'] = array(
+        '#type' => 'checkbox',
+        '#default_value' => isset($this->options['info'][$field]['include_empties']) ? $this->options['info'][$field]['include_empties'] : '',
+        '#size' => 5,
+        '#dependency' => array($id => array($field)),
+      );
       $form['info'][$field]['suffix'] = array(
         '#type' => 'textfield',
         '#default_value' => isset($this->options['info'][$field]['suffix']) ? $this->options['info'][$field]['suffix'] : '',
-        '#size' => 6,
+        '#size' => 5,
         '#dependency' => array($id => array($field)),
       );
       $form['info'][$field]['thousand'] = array(
         '#type' => 'textfield',
         '#default_value' => isset($this->options['info'][$field]['thousand']) ? $this->options['info'][$field]['thousand'] : ',',
-        '#size' => 6,
+        '#size' => 5,
         '#dependency' => array($id => array($field)),
       );
       $form['info'][$field]['decimal'] = array(
         '#type' => 'textfield',
         '#default_value' => isset($this->options['info'][$field]['decimal']) ? $this->options['info'][$field]['decimal'] : '.',
-        '#size' => 6,
+        '#size' => 5,
         '#dependency' => array($id => array($field)),
       );
       $form['info'][$field]['precision'] = array(
         '#type' => 'textfield',
         '#default_value' => isset($this->options['info'][$field]['precision']) ? $this->options['info'][$field]['precision'] : '2',
-        '#size' => 6,
+        '#size' => 5,
         '#dependency' => array($id => array($field)),
       );
     }

@@ -12,7 +12,7 @@ CONTENTS OF THIS FILE
 INTRODUCTION
 ------------
 
-The Views Summarize module Enables an extra display style which displays
+The Views Summarize module enables an extra display style which displays
 summaries of a column on the last row.
 
  * To submit bug reports and feature suggestions, or track changes:
