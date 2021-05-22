@@ -28,16 +28,19 @@ create that uses the Summarized table display style does. Add and configure the
 fields you want to display, then click the "settings" link for the Summarized
 table format.
 
-On the popup form will be six columns that relate to this module:
- * Summarize prefix: One or more characters to display before the summary, like
-   a currency symbol
- * Summarize: Specify which summary handler to use for the field
- * Summarize suffix: One or more characters to display after the summary, like a
-   currency abbreviation
- * Summarize thousand: The character to use as a thousand separator
- * Summarize decimal: The character to use as a thousand separator
- * Summarize precision: The number of characters to place after the decimal
-   separator
+On the popup form will be seven columns that relate to this module:
+- Summarize prefix: One or more characters to display before the summary, like a
+  currency symbol
+- Summarize: Specify which summary handler to use for the field
+- Include empty values: Check this box for each summary (e.g., Average) where
+  any empty fields are to be taken into consideration (values like 0 are always
+  included, this only affects values that are not set)
+- Summarize suffix: One or more characters to display after the summary, like a
+  currency abbreviation
+- Summary thousands separator: The character to use as a thousand separator
+- Summary decimal separator: The character to use as a thousand separator
+- Summarize precision: The number of characters to place after the decimal
+  separator
 
 Also on that form, toward the bottom of the form, are these settings:
 - Views Summarize: Display the summary row only: If checked, only the summary
