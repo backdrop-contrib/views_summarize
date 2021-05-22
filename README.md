@@ -62,6 +62,7 @@ It is possible to extend this module by specifying your own summaries.
 Here is example code that could be placed in a .module file to add a summary
 that totals the records and displays the total as hours and minutes:
 
+```php
 <?php
 
 /**
@@ -96,6 +97,7 @@ function theme_my_module_views_summarize_hours_min($variables) {
   $data = $variables['data'];
   return '<div class="label">' . format_interval(array_sum($data),2) . '</div>';
 }
+```
 
 Current Maintainers
 -------------------
