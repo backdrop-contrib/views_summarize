@@ -1,40 +1,26 @@
-CONTENTS OF THIS FILE
----------------------
-
- * Introduction
- * Requirements
- * Installation
- * Configuration
- * Extending
- * Maintainers
-
-
-INTRODUCTION
-------------
+Views Summarize
+===============
 
 The Views Summarize module enables an extra display style which displays
 summaries of a column on the last row.
 
  * To submit bug reports and feature suggestions, or track changes:
-   https://www.drupal.org/project/issues/views_summarize
+   https://github.com/backdrop-contrib/views_summarize/issues
 
-
-REQUIREMENTS
+Requirements
 ------------
 
-This module requires the following modules:
+This module requires that the following modules are also enabled:
 
  * Views (https://www.drupal.org/project/views)
 
-
-INSTALLATION
+Installation
 ------------
 
- * Install as you would normally install a contributed Drupal module. Visit
-   https://www.drupal.org/node/895232/ for further information.
+- Install this module using the official Backdrop CMS instructions at
+  https://backdropcms.org/guide/modules.
 
-
-CONFIGURATION
+Configuration
 -------------
 
 This module does not itself have configuration, but each Views display you
@@ -53,12 +39,17 @@ On the popup form will be six columns that relate to this module:
  * Summarize precision: The number of characters to place after the decimal
    separator
 
-Also on that form, toward the bottom of the form, is the "Display the summary
-row only" setting. Checking that box means that the data that is being
-summarized will not be displayed.
+Also on that form, toward the bottom of the form, are these settings:
+- Views Summarize: Display the summary row only: If checked, only the summary
+  row will be displayed. You must also specify the "Display the summary below
+  the data" option.
+- Views Summarize: Display the summary above the data: If checked, the summary
+  row will be displayed above the other rows. If the "Display only the summary
+  row" option above is selected, this summary will not be displayed.
+- Views Summarize: Display the summary below the data: If checked, the summary
+  row will be displayed below the other rows.
 
-
-EXTENDING
+Extending
 ---------
 
 It is possible to extend this module by specifying your own summaries.
@@ -106,10 +97,19 @@ function theme_my_module_views_summarize_hours_min($variables) {
   return '<div class="label">' . format_interval(array_sum($data),2) . '</div>';
 }
 
+Current Maintainers
+-------------------
 
-MAINTAINERS
------------
+- [Jason Flatt (oadaeh)](https://github.com/oadaeh)
 
-Current maintainers:
- * Aidan Lister (aidanlis) - https://www.drupal.org/u/aidanlis
- * Jason Flatt (oadaeh) - https://www.drupal.org/u/oadaeh
+Credits
+-------
+
+- Ported to Backdrop CMS by [Jason Flatt (oadaeh)](https://github.com/oadaeh).
+- Originally written for Drupal by [Aidan Lister (aidanlis)](https://www.drupal.org/u/aidanlis).
+
+License
+-------
+
+This project is GPL v2 software.
+See the LICENSE.txt file in this directory for complete text.
