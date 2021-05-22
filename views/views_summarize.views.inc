@@ -17,6 +17,7 @@ function views_summarize_views_plugins() {
         'handler' => 'views_summarize_plugin_style_tablesummarized',
         'parent' => 'table',
         'theme' => 'views_summarize_views_tablesummarized',
+        'theme file' => 'views_summarize.theme.inc',
         'uses row plugin' => FALSE,
         'uses row class' => TRUE,
         'uses fields' => TRUE,

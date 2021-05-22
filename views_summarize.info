@@ -1,9 +1,7 @@
 name = Views summarize
 description = Provides a style plugin for Views allowing tables to summarized.
-core = 7.x
+type = module
+backdrop = 1.x
 package = Views
 dependencies[] = views
-
-files[] = views_summarize_plugin_style_tablesummarized.inc
-
-;stylesheets[all][] = views_summarize.css
+stylesheets[all][] = css/views_summarize.css

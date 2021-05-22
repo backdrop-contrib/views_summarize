@@ -87,9 +87,18 @@ class views_summarize_plugin_style_tablesummarized extends views_plugin_style_ta
    */
   function option_definition() {
     $options = parent::option_definition();
-    $options['summary_only'] = array('default' => FALSE, 'bool' => TRUE);
-    $options['summary_above'] = array('default' => FALSE, 'bool' => TRUE);
-    $options['summary_below'] = array('default' => TRUE, 'bool' => TRUE);
+    $options['summary_only'] = array(
+      'default' => FALSE,
+      'bool' => TRUE,
+    );
+    $options['summary_above'] = array(
+      'default' => FALSE,
+      'bool' => TRUE,
+    );
+    $options['summary_below'] = array(
+      'default' => TRUE,
+      'bool' => TRUE,
+    );
     return $options;
   }
 
